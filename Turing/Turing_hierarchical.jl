@@ -37,6 +37,8 @@ end
 
 model = varying_intercept(X, idx, y)
 
+prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
+
 # 22.6s
 @time chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
