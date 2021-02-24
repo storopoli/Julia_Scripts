@@ -1,0 +1,39 @@
+---
+title : Plotting Multivariate Distributions
+author : Jose Storopoli
+date: Created on 19/02/2021. Updated on `j import Dates; Dates.format(Dates.now(), Dates.dateformat"dd/mm/Y")`
+---
+
+```julia; echo = false
+using Dates
+```
+
+# Hello!
+
+```julia
+using Distributions, Plots, StatsPlots
+```
+
+## Univariate Distributions using `StatsPlots`
+
+```julia
+plot(Normal())
+```
+
+## Multivariate Distributions using `Plots`
+
+```julia
+mvnorm = fit(MvNormal, [rand(0.0:100.0, 100) rand(0.0:100.0, 100)]')
+Z = [pdf(mvnorm, [i, j]) for i in 0:100, j in 0:100]
+plot(0:100, 0:100, Z, st = :wireframe, color=:blues)
+plot(0:100, 0:100, Z, st = :surface)
+```
+
+## Environment
+
+```julia
+using InteractiveUtils
+versioninfo()
+using Pkg
+Pkg.status()
+```
