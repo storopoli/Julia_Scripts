@@ -43,7 +43,7 @@ plot!(
     fillalpha=0.2,
     c=1, label="Credible 25% - 75% Band")
 scatter!(
-    df.temp, (df.num_failure ./ 6),
+    df.temp, df.num_failure,
     markercolor=:blue,
     label="Actual")
 vline!([28], c=:green, label="Temperature at Launch", linewidth=3)
