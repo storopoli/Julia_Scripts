@@ -33,15 +33,15 @@ plot(
     temps, y,
     linewidth=3,
     linecolor=:red,
+    ribbon=(y - lower, upper - y),
+    fillalpha=0.2,
+    fillcolor=:red,
     label="Predicted",
+    title="Challenger Disaster",
     xlabel="Temperature Fᵒ",
     ylabel="O-Rings Failures",
     ylims=(0, 6))
-plot!(
-    temps, lower,
-    fillrange=upper,
-    fillalpha=0.2,
-    c=1, label="Credible 25% - 75% Band")
+
 scatter!(
     df.temp, df.num_failure,
     markercolor=:blue,

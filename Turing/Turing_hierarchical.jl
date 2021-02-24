@@ -2,7 +2,6 @@ using Turing, RDatasets
 using Random:seed!
 using Statistics: mean, std
 using LinearAlgebra: cholesky, kron
-using MLDataUtils:rescale!
 
 seed!(1)
 
@@ -19,7 +18,6 @@ idx = map(idx) do i
     i == 8 ? 3 : missing
 end
 X = Matrix(select(mtcars, [:HP, :WT])) # the model matrix
-μ, σ = rescale!(X; obsdim=1)
 
 # Model
 @model varying_intercept(X, idx, y; n_gr=length(unique(idx)), predictors=size(X, 2)) = begin
@@ -29,17 +27,40 @@ X = Matrix(select(mtcars, [:HP, :WT])) # the model matrix
     # Coefficients Student-t(ν = 3)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
-    σᵢ ~ Truncated(Cauchy(0, 2), 0, Inf)
-    μᵢ ~ filldist(Normal(0, σᵢ), n_gr)      # group-level intercepts
+    σⱼ ~ Truncated(Cauchy(0, 2), 0, Inf)
+    μⱼ ~ filldist(Normal(0, σⱼ), n_gr)      # group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ μᵢ[idx]
+    ŷ = μ .+ X * β .+ μⱼ[idx]
     y ~ MvNormal(ŷ, σ)
 end
 
 model = varying_intercept(X, idx, y)
 
+# 22.6s
 @time chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
+
+
+#### NCP Varying Intercept Model ####
+@model varying_intercept_ncp(X, idx, y; n_gr=length(unique(idx)), predictors=size(X, 2)) = begin
+    # priors
+    μ ~ Normal(mean(y), 2.5 * std(y))       # population-level intercept
+    σ ~ Exponential(1 / std(y))             # residual SD
+    # Coefficients Student-t(ν = 3)
+    β ~ filldist(TDist(3), predictors)
+    # Prior for variance of random intercepts. Usually requires thoughtful specification.
+    σⱼ ~ Truncated(Cauchy(0, 2), 0, Inf)
+    zⱼ ~ filldist(Normal(0, 1), n_gr)      # NCP group-level intercepts
+
+    # likelihood
+    ŷ = μ .+ X * β .+ zⱼ[idx] .* σⱼ
+    y ~ MvNormal(ŷ, σ)
+end
+
+model = varying_intercept_ncp(X, idx, y)
+
+# 22.3s
+@time chn2 = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 #### Varying Slope Model ####
 
@@ -73,31 +94,38 @@ chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 X = [fill(1, size(X, 1)) X]
 
 # Model
-@model varying_slope(X, idx, y) = begin
-    n_gr = length(unique(idx))
-    m_X = size(X, 2)
+# WIP -- https://statisticalrethinkingjulia.github.io/TuringModels.jl/models/varying-slopes-cafe/
+@model varying_intercept_slope(X, idx, y; n_gr=length(unique(idx)), predictors=size(X, 2)) = begin
 
     # priors
-    β ~ filldist(TDist(3), m_X)                               # hyperprior for intercept and slope
-    σ ~ Exponential(1 / std(y))                               # residual SD
-    Ω ~ LKJ(m_X, 2.0)                                         # Correlation Matrix
-    τ ~ filldist(Truncated(Cauchy(0, 2), 0, Inf), size(X, 2)) # SD for intercept and slope
-    z_ρ ~ filldist(Normal(), m_X, n_gr)                       # matrix of intercepts and slope
+    ρ ~ LKJ(predictors + 1, 1.0)                                      # Correlation Matrix
+    σ ~ truncated(Cauchy(0, 2), 0, Inf)                               # residual SD
+    σⱼ ~ filldist(Truncated(Cauchy(0, 2), 0, Inf), (predictors + 1))  # Hyperprior SD for intercepts and slopes
+    β ~ filldist(Normal(0, 10), (predictors + 1))                     # Hyperprior intercept and slopes
+    # α ~ Normal(0, 10)                                                # Hyperprior intercept
+    # β ~ Normal(0, 10)                                                # Hyperprior for slopes
 
-    # build Σ and Random Effets
-    L = LinearAlgebra.cholesky(Ω).L
-    D = I(m_X) .* LinearAlgebra.kron(ones(m_X)', τ)           # Diagonal(τ)
-    z = D * L * z_ρ                                           # non-centered version of β
+    dist_Σ = σⱼ .* ρ .* σⱼ'
+    dist_Σ = (dist_Σ' + dist_Σ) / 2
+    α_βⱼ ~ filldist(MvNormal(β, dist_Σ), 20)
+
+    αⱼ = α_βⱼ[1, :]
+    βⱼ = α_βⱼ[2:end, :]
+    @show size(βⱼ)
+    # build ρ and Random Effects
+    # Ω = (Ω' + Ω) / 2
+    # L = LinearAlgebra.cholesky(Ω).L
+    # D = I(predictors) .* LinearAlgebra.kron(ones(predictors)', τ)   # Diagonal(τ)
+    # z = D * L * z_ρ                                                 # non-centered version of β
+
+    μ = αⱼ[idx] .+ X * βⱼ[idx]
 
     # likelihood
-    ŷ = β[1] .+ z[1, idx] .+ (β[2] .+ z[2, idx]) .* X[:, 2]
-    y ~ MvNormal(ŷ, σ)
-
-    # generated quantities
-    return z
+    # ŷ = μ .+ z[1, idx] .+ (β[2] .+ ) .* X[:, 2]
+    y ~ MvNormal(μ, σ)
 end
 
-model = varying_slope(X, idx, y)
+model = varying_intercept_slope(X, idx, y)
 
 chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
