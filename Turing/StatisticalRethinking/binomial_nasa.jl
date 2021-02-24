@@ -14,14 +14,16 @@ end
 
 model = binomial_model(df.num_orings, df.temp, df.num_failure)
 
-chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
+chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4, progress=true)
 
-temps = 10:80
-avg, beta = median(chn)[:, :mean]
-y = avg .+ exp.(beta .* temps)
+# function to convert logodds
+function logodds2prob(logodds::Float64)
+    return exp(logodds) / (1 + exp(logodds))
+end
 
-
-loess_ = loess(temps, y);
+temps = 10:0.01:80
+alpha, beta = quantile(chn)[:, :var"50.0%"]
+y = logodds2prob.(alpha .+ beta .* temps) .* 6
 
 scatter(df.temp, (df.num_failure ./ 6), markercolor=:blue, label="Actual")
 plot!(temps, y, linecolor=:red, label="Predicted")
