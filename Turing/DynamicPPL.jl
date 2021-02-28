@@ -19,11 +19,11 @@ nwarmup, nsamples, nchains = 1000, 1000, 4;
 
 @model school8(J, y, σ) = begin
     μ ~ Normal(0, 5)
-    τ ~ Truncated(Cauchy(0, 5), 0, Inf)
+    τ ~ truncated(Cauchy(0, 5), 0, Inf)
     θ ~ Normal(μ, τ)
     for j = 1:J
-        y[j] ~ Normal(θ, σ[j])
-    end
+    y[j] ~ Normal(θ, σ[j])
+end
 end
 
 model = school8(J, y, σ);

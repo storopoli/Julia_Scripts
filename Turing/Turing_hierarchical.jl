@@ -24,7 +24,7 @@ X = Matrix(select(df, [:displ, :year])) # the model matrix
     # Coefficients Student-t(ν = 3)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
-    σⱼ ~ Truncated(Cauchy(0, 2), 0, Inf)
+    σⱼ ~ truncated(Cauchy(0, 2), 0, Inf)
     μⱼ ~ filldist(Normal(0, σⱼ), n_gr)      # group-level intercepts
 
     # likelihood
@@ -32,7 +32,7 @@ X = Matrix(select(df, [:displ, :year])) # the model matrix
     y ~ MvNormal(ŷ, σ)
 end
 
-model = varying_intercept(X, idx, y)
+model = varying_intercept(X, idx, float(y))
 
 prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
 
@@ -48,7 +48,7 @@ prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
     # Coefficients Student-t(ν = 3)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
-    σⱼ ~ Truncated(Cauchy(0, 2), 0, Inf)
+    σⱼ ~ truncated(Cauchy(0, 2), 0, Inf)
     zⱼ ~ filldist(Normal(0, 1), n_gr)      # NCP group-level intercepts
 
     # likelihood
@@ -56,18 +56,18 @@ prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
     y ~ MvNormal(ŷ, σ)
 end
 
-model_ncp = varying_intercept_ncp(X, idx, y)
+model_ncp = varying_intercept_ncp(X, idx, float(y))
 
-# 184s
+# 164s
 @time chn2 = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 #### Different Autodiffs ####
 
-# Zygote - Fail
+# Zygote - Too Long
 Turing.setadbackend(:zygote)
 @time chn_zygote = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
-# Tracker - Too Long
+# Tracker - 471s
 Turing.setadbackend(:tracker)
 @time chn_tracker = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
