@@ -1,12 +1,14 @@
-using Turing, DataFrames, Pipe, CSV, HTTP, Zygote, ReverseDiff
+using Turing, DataFrames, Chain, CSV, HTTP, Zygote, ReverseDiff
 using Random:seed!
 using Statistics: mean, std
 
 seed!(1)
 setprogress!(true)
 
-df = @pipe HTTP.get("https://github.com/selva86/datasets/blob/master/mpg_ggplot2.csv?raw=TRUE").body |>
-    CSV.read(_, DataFrame)
+df = @chain HTTP.get("https://github.com/selva86/datasets/blob/master/mpg_ggplot2.csv?raw=TRUE") begin
+    _.body
+    CSV.read(DataFrame)
+end
 
 #### Data Prep ####
 idx_map = Dict(key => idx for (idx, key) in enumerate(unique(df.class)))
