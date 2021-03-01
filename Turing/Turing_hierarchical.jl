@@ -57,6 +57,7 @@ prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
 end
 
 model_ncp = varying_intercept_ncp(X, idx, float(y))
+prior_ncp = sample(model_ncp, Prior(), MCMCThreads(), 2_000, 4)
 
 # 164s
 @time chn2 = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
