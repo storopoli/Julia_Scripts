@@ -1,4 +1,4 @@
-using Turing, DynamicPPL, DynamicHMC, StatsPlots
+using Turing, StatsPlots
 
 
 J = 8

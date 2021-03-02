@@ -1,4 +1,4 @@
-using Turing, StatsPlots
+using Turing, ThArrays
 
 N = 10_000  # 10,000 obs
 K = 7      # 7 predictors
@@ -19,7 +19,8 @@ end
 
 model = big_data(y, X)
 
-# 56s
+# Dell G5 47s
 @time chn = sample(model, NUTS(), MCMCThreads(), 2_000, 4)
 
-plot(chn)
+# CUDA PyTorch
+cuda_X = to(Tensor(X), CUDA(0));
