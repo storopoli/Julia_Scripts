@@ -8,6 +8,7 @@ date: Created on 09/03/2021. Updated on `j import Dates; Dates.format(Dates.now(
 using Dates
 ```
 <!--  weave("Neals_funnel.jmd", doctype = "pandoc2html", fig_path="images", pandoc_options=["-s", "--citeproc", "--bibliography=bib/Neals_funnel.bib", "--csl=bib/apa.csl"]) -->
+<!--  weave("Neals_funnel.jmd", doctype = "pandoc2pdf", fig_path="images", pandoc_options=["-s", "--citeproc", "--bibliography=bib/Neals_funnel.bib", "--csl=bib/apa.csl"]) -->
 
 
 In this notebook we analyze Neal's Funnel [@neal2011mcmc]. @neal2011mcmc defines a distribution that exemplifies the difficulties of sampling from some hierarchical models. Neal’s example is fairly extreme, but can be trivially reparameterized in such a way as to make sampling straightforward. Neal’s example has support for  $y \in \mathbb{R}$ and $x \in \mathbb{R}^9$ with density
