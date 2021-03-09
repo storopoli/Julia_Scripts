@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ c52d6fbc-80eb-11eb-2e19-c98b6df84890
 begin
 	using PlutoUI, Distributions, Plots
-	using PlutoUI: Print
+	using PlutoUI:Print
 	Plots.plotly()
 end
 
@@ -74,7 +74,7 @@ We can provide the MCMC sampler a better-behaved posterior geometry to explore:
 
 ```math
 \begin{aligned}
-p(y^*,x^*) &= \text{Normal}(y^* \mid 0,0) \times \prod_{n=1}^9
+p(y^*,x^*) &= \text{Normal}(y^* \mid 0,0) \times \prod_{n=1}^2
 \text{Normal}(x^*_n \mid 0,0)\\
 y &= 3y^*\\
 x_n &= \exp \left( \frac{y}{2} \right) x^*_n.

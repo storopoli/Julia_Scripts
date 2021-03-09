@@ -2,13 +2,14 @@
 title : Neal's Funnel
 author : Jose Storopoli
 date: Created on 09/03/2021. Updated on `j import Dates; Dates.format(Dates.now(), Dates.dateformat"dd/mm/Y")`
+weave_options:
+    doctype: pandoc2html
 ---
 
 ```julia; echo = false
 using Dates
 ```
-<!--  weave("Neals_funnel.jmd", doctype = "pandoc2html", fig_path="images", pandoc_options=["-s", "--citeproc", "--bibliography=bib/Neals_funnel.bib", "--csl=bib/apa.csl"]) -->
-<!--  weave("Neals_funnel.jmd", doctype = "pandoc2pdf", fig_path="images", pandoc_options=["-s", "--citeproc", "--bibliography=bib/Neals_funnel.bib", "--csl=bib/apa.csl"]) -->
+<!--  weave("Neals_funnel.jmd", pandoc_options=["-s", "--citeproc", "--bibliography=bib/Neals_funnel.bib", "--csl=bib/apa.csl"]) -->
 
 
 In this notebook we analyze Neal's Funnel [@neal2011mcmc]. @neal2011mcmc defines a distribution that exemplifies the difficulties of sampling from some hierarchical models. Neal’s example is fairly extreme, but can be trivially reparameterized in such a way as to make sampling straightforward. Neal’s example has support for  $y \in \mathbb{R}$ and $x \in \mathbb{R}^9$ with density
@@ -23,7 +24,7 @@ The probability contours are shaped like ten-dimensional funnels. The funnel’s
 
 [^1]: see from 45' onwards.
 
-```julia; label = "funneldensity"
+```julia; label = "funneldensity", fig_cap="The Funnel"
 using Distributions, Plots
 
 x = -2:0.01:2;
@@ -54,7 +55,7 @@ $$
 
 Below there is is the Neal's Funnel reparameterized as standard normal density in 3-D.
 
-```julia; label = "funneldensityrepar"
+```julia; label = "funneldensityrepar", fig_cap="The Funnel Reparameterized"
 kernel_reparameterized(x, y) = logpdf(Normal(), x)
 surface(x, x,  kernel_reparameterized)
 ```
@@ -64,8 +65,6 @@ surface(x, x,  kernel_reparameterized)
 ```julia
 using InteractiveUtils
 versioninfo()
-using Pkg
-Pkg.status()
 ```
 
 # References
