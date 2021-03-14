@@ -7,6 +7,6 @@ df = pd.DataFrame({'x': np.random.choice(['A', 'B', 'C', 'D'], n, replace = True
                    'y': np.random.randn(n),
                    'z': np.random.rand(n)})
 
-# 2.12ms
+# 1.73ms
 %%timeit
 df.groupby('x').agg({'y': 'mean', 'z': 'median'})
