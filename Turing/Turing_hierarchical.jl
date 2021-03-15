@@ -26,8 +26,8 @@ X = Matrix(select(df, [:displ, :year])) # the model matrix
     # Coefficients Student-t(ν = 3)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
-    σⱼ ~ truncated(Cauchy(0, 2), 0, Inf)
-    μⱼ ~ filldist(Normal(0, σⱼ), n_gr)      # group-level intercepts
+    τ ~ truncated(Cauchy(0, 2), 0, Inf)
+    μⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
 
     # likelihood
     ŷ = μ .+ X * β .+ μⱼ[idx]
@@ -50,11 +50,11 @@ prior = sample(model, Prior(), MCMCThreads(), 2_000, 4)
     # Coefficients Student-t(ν = 3)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
-    σⱼ ~ truncated(Cauchy(0, 2), 0, Inf)
+    τ ~ truncated(Cauchy(0, 2), 0, Inf)
     zⱼ ~ filldist(Normal(0, 1), n_gr)      # NCP group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ zⱼ[idx] .* σⱼ
+    ŷ = μ .+ X * β .+ zⱼ[idx] .* τ
     y ~ MvNormal(ŷ, σ)
 end
 
