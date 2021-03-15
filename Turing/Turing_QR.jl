@@ -19,6 +19,8 @@ X = Matrix(select(df, [:displ, :year])) # the model matrix
 
 #### QR Decomposition ####
 Q, R = qr(X)
+Q_ast = Matrix(Q) * sqrt(size(X, 1) - 1)
+R_ast = R / sqrt(size(X, 1) - 1)
 
 #### Varying Intercept Model ####
 # Model
@@ -27,18 +29,18 @@ Q, R = qr(X)
     μ ~ Normal(mean(y), 2.5 * std(y))       # population-level intercept
     σ ~ Exponential(1 / std(y))             # residual SD
     # Coefficients Student-t(ν = 3)
-    β ~ filldist(TDist(3), predictors)
+    θ ~ filldist(TDist(3), predictors)      # coefficients on Q_ast
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
     τ ~ truncated(Cauchy(0, 2), 0, Inf)
     αⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ αⱼ[idx]
+    ŷ = μ .+ X * θ .+ αⱼ[idx]
     y ~ MvNormal(ŷ, σ)
 end
 
 model = varying_intercept(X, idx, float(y))
-model_qr = varying_intercept(Matrix(Q), idx, float(y))
+model_qr = varying_intercept(Q_ast, idx, float(y))
 
 # 135.6s
 @time chn = sample(model, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
@@ -46,9 +48,9 @@ model_qr = varying_intercept(Matrix(Q), idx, float(y))
 # 19.6s
 @time chn_qr = sample(model_qr, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
-#### get β from Q^T * y by R^-1 * β ####
-beta = mapslices(x -> R^-1 * x, chn_qr[:,namesingroup(chn_qr, :β),:].value.data, dims=[2])
-chn_qr_reconstructed = hcat(Chains(beta, ["displ", "year"]), chn_qr)
+#### get β from Q^T * y by R^-1 * θ ####
+betas = mapslices(x -> R_ast^-1 * x, chn_qr[:,namesingroup(chn_qr, :θ),:].value.data, dims=[2])
+chn_qr_reconstructed = hcat(Chains(betas2, ["β[$i]" for i in 1:size(Q_ast, 2)]), chn_qr)
 
 #### ESS Comparison ####
 # 4238 ESS
@@ -67,28 +69,33 @@ combine(DataFrame(ess(group(chn_qr, :αⱼ))),  [:ess, :rhat] .=> mean)
     μ ~ Normal(mean(y), 2.5 * std(y))       # population-level intercept
     σ ~ Exponential(1 / std(y))             # residual SD
     # Coefficients Student-t(ν = 3)
-    β ~ filldist(TDist(3), predictors)
+    θ ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
     τ ~ truncated(Cauchy(0, 2), 0, Inf)
     zⱼ ~ filldist(Normal(0, 1), n_gr)      # NCP group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ zⱼ[idx] .* τ
+    ŷ = μ .+ X * θ .+ zⱼ[idx] .* τ
     y ~ MvNormal(ŷ, σ)
 end
 
-model_ncp = varying_intercept(X, idx, float(y))
-model_qr_ncp = varying_intercept(Matrix(Q), idx, float(y))
+model_ncp = varying_intercept_ncp(X, idx, float(y))
+model_qr_ncp = varying_intercept_ncp(Q_ast, idx, float(y))
 
 # 138.6s
-@time chn = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
+@time chn_ncp = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 # 14.9s
-@time chn_qr = sample(model_qr_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
+@time chn_qr_ncp = sample(model_qr_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
-#### get β from Q^T * y by R^-1 * β ####
-quantiles_beta = select(DataFrame(quantile(group(chn_qr, :β))), r"%")
-mapcols(x -> R^-1 * x, quantiles_beta)
+#### get αⱼ from zⱼ by zⱼ * τ ####
+τ = summarystats(chn_qr_ncp)[:τ, :mean]
+αⱼ = mapslices(x -> x * τ, chn_qr_ncp[:,namesingroup(chn_qr_ncp, :zⱼ),:].value.data, dims=[2])
+chn_ncp_reconstructed = hcat(Chains(αⱼ, ["αⱼ[$i]" for i in 1:length(unique(idx))]), chn_qr_ncp)
+
+#### get β by R_ast^-1 * θ ####
+betas = mapslices(x -> R_ast^-1 * x, chn_qr_ncp[:,namesingroup(chn_qr_ncp, :θ),:].value.data, dims=[2])
+chn_qr_ncp_reconstructed = hcat(Chains(betas, ["β[$i]" for i in 1:size(Q_ast, 2)]), chn_ncp_reconstructed)
 
 #### ESS Comparison ####
 # 4398 ESS
