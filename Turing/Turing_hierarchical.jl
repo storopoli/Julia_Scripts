@@ -27,10 +27,10 @@ X = Matrix(select(df, [:displ, :year])) # the model matrix
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
     τ ~ truncated(Cauchy(0, 2), 0, Inf)
-    μⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
+    αⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ μⱼ[idx]
+    ŷ = μ .+ X * β .+ αⱼ[idx]
     y ~ MvNormal(ŷ, σ)
 end
 
@@ -63,6 +63,11 @@ prior_ncp = sample(model_ncp, Prior(), MCMCThreads(), 2_000, 4)
 
 # 199s
 @time chn2 = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
+
+#### get αⱼ from zⱼ by zⱼ * τ ####
+τ = summarystats(chn2)[:τ, :mean]
+αⱼ = mapslices(x -> x * τ, chn2[:,namesingroup(chn2, :zⱼ),:].value.data, dims=[2])
+chn_reconstructed = hcat(Chains(αⱼ, ["αⱼ[$i]" for i in 1:length(unique(idx))]), chn2)
 
 #### Different Autodiffs ####
 

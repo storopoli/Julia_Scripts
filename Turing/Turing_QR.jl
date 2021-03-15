@@ -30,10 +30,10 @@ Q, R = qr(X)
     β ~ filldist(TDist(3), predictors)
     # Prior for variance of random intercepts. Usually requires thoughtful specification.
     τ ~ truncated(Cauchy(0, 2), 0, Inf)
-    μⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
+    αⱼ ~ filldist(Normal(0, τ), n_gr)      # group-level intercepts
 
     # likelihood
-    ŷ = μ .+ X * β .+ μⱼ[idx]
+    ŷ = μ .+ X * β .+ αⱼ[idx]
     y ~ MvNormal(ŷ, σ)
 end
 
@@ -47,19 +47,19 @@ model_qr = varying_intercept(Matrix(Q), idx, float(y))
 @time chn_qr = sample(model_qr, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 #### get β from Q^T * y by R^-1 * β ####
-quantiles_beta = select(DataFrame(quantile(group(chn_qr, :β))), r"%")
-mapcols(x -> R^-1 * x, quantiles_beta)
+beta = mapslices(x -> R^-1 * x, chn_qr[:,namesingroup(chn_qr, :β),:].value.data, dims=[2])
+chn_qr_reconstructed = hcat(Chains(beta, ["displ", "year"]), chn_qr)
 
 #### ESS Comparison ####
 # 4238 ESS
 combine(DataFrame(ess(group(chn, :β))),  [:ess, :rhat] .=> mean)
 # 1614 ESS
-combine(DataFrame(ess(group(chn, :μⱼ))),  [:ess, :rhat] .=> mean)
+combine(DataFrame(ess(group(chn, :αⱼ))),  [:ess, :rhat] .=> mean)
 
 # 6004 ESS
 combine(DataFrame(ess(group(chn_qr, :β))),  [:ess, :rhat] .=> mean)
 # 1688 ESS
-combine(DataFrame(ess(group(chn_qr, :μⱼ))),  [:ess, :rhat] .=> mean)
+combine(DataFrame(ess(group(chn_qr, :αⱼ))),  [:ess, :rhat] .=> mean)
 
 #### NCP Varying Intercept Model ####
 @model varying_intercept_ncp(X, idx, y; n_gr=length(unique(idx)), predictors=size(X, 2)) = begin
@@ -94,9 +94,9 @@ mapcols(x -> R^-1 * x, quantiles_beta)
 # 4398 ESS
 combine(DataFrame(ess(group(chn, :β))),  [:ess, :rhat] .=> mean)
 # 2198 ESS
-combine(DataFrame(ess(group(chn, :μⱼ))),  [:ess, :rhat] .=> mean)
+combine(DataFrame(ess(group(chn, :αⱼ))),  [:ess, :rhat] .=> mean)
 
 # 6149 ESS
 combine(DataFrame(ess(group(chn_qr, :β))),  [:ess, :rhat] .=> mean)
 # 1523 ESS
-combine(DataFrame(ess(group(chn_qr, :μⱼ))),  [:ess, :rhat] .=> mean)
+combine(DataFrame(ess(group(chn_qr, :αⱼ))),  [:ess, :rhat] .=> mean)
