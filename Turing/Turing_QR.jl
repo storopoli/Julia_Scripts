@@ -85,12 +85,12 @@ model_qr_ncp = varying_intercept_ncp(Q_ast, idx, float(y))
 # 138.6s
 @time chn_ncp = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
-# 14.9s
+# 43s vs 28s brms (2.15, brms.normalize = FALSE, QR = TRUE, Sampling 1.2s)
 @time chn_qr_ncp = sample(model_qr_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 #### get αⱼ from zⱼ by zⱼ * τ ####
 τ = summarystats(chn_qr_ncp)[:τ, :mean]
-αⱼ = mapslices(x -> x * τ, chn_qr_ncp[:,namesingroup(chn_qr_ncp, :zⱼ),:].value.data, dims=[2])
+αⱼ = mapslices(x -> x * τ, chn_qr_ncp[:, namesingroup(chn_qr_ncp, :zⱼ),:].value.data, dims=[2])
 chn_ncp_reconstructed = hcat(Chains(αⱼ, ["αⱼ[$i]" for i in 1:length(unique(idx))]), chn_qr_ncp)
 
 #### get β by R_ast^-1 * θ ####
