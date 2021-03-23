@@ -7,7 +7,7 @@ df <- tibble(
     z = rnorm(n)
 )
 
-# 3.17ms
+# 3.17ms (1.61ms M1)
 bench::mark(
     df %>%
         group_by(x) %>%
