@@ -63,10 +63,10 @@ end
 model_ncp = varying_intercept_ncp(X, idx, float(y))
 model_qr_ncp = varying_intercept_ncp(Q_ast, idx, float(y))
 
-# 70s Dell G5
+# 90s Dell G5
 @time chn_ncp = sample(model_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
-# 9s Dell G4
+# 45s Dell G4
 @time chn_qr_ncp = sample(model_qr_ncp, NUTS(1_000, 0.65), MCMCThreads(), 2_000, 4)
 
 #### Divergences ####
