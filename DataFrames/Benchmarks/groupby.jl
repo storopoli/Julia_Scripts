@@ -12,7 +12,7 @@ df = DataFrame(
 # 520µs (0.52ms) (292µs M1 1.7.0, 534µs M1 Intel)
 @benchmark @pipe $df |> groupby(_, :x) |> combine(_, :y => median, :z => mean)
 
-# 506µs (0.5ms) (292µs M1 1.7.0, 534µs M1 Intel) (410µs Dell G5)
+# 506µs (0.5ms) (292µs M1 1.7.0, 534µs M1 Intel) (410µs Dell G5, 378µs using MKL and BLAS.set_num_threads)
 @benchmark @chain $df begin
     groupby(:x)
     combine(:y => median, :z => mean)
