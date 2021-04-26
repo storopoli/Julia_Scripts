@@ -9,10 +9,10 @@ df = DataFrame(
     z=randn(n),
 )
 
-# 520µs (0.52ms) (292µs M1 1.7.0, 534µs M1 Intel)
+# 420µs (0.42ms) (292µs M1 1.7.0, 534µs M1 Intel)
 @benchmark @pipe $df |> groupby(_, :x) |> combine(_, :y => median, :z => mean)
 
-# 506µs (0.5ms) (292µs M1 1.7.0, 534µs M1 Intel) (410µs Dell G5, 378µs using MKL and BLAS.set_num_threads)
+# 409µs (0.4ms) (292µs M1 1.7.0, 534µs M1 Intel) (410µs Dell G5, 378µs using MKL and BLAS.set_num_threads)
 @benchmark @chain $df begin
     groupby(:x)
     combine(:y => median, :z => mean)
