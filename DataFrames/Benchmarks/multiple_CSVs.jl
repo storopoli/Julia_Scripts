@@ -43,4 +43,4 @@ files = filter!(endswith(".csv"), readdir(dir, join=true))
 
 @btime reduce(vcat, CSV.read(file, DataFrame) for file in $files)
 
-@btime mapreduce(DataFrame ∘ CSV.File, vcat, $files)
+@btime mapreduce(x -> CSV.read(x, DataFrame), vcat, $files)
