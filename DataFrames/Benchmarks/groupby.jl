@@ -1,4 +1,4 @@
-using Random, StatsBase, DataFrames, BenchmarkTools, Chain, Pipe
+using Random, StatsBase, DataFrames, BenchmarkTools, Chain
 Random.seed!(123)
 
 n = 10_000
@@ -8,9 +8,6 @@ df = DataFrame(
     y=rand(n),
     z=randn(n),
 )
-
-# 420µs (0.42ms) (292µs M1 1.7.0, 534µs M1 Intel)
-@benchmark @pipe $df |> groupby(_, :x) |> combine(_, :y => median, :z => mean)
 
 # 409µs (0.4ms) (292µs M1 1.7.0, 534µs M1 Intel) (410µs Dell G5, 378µs using MKL and BLAS.set_num_threads)
 @benchmark @chain $df begin

@@ -8,5 +8,5 @@ df = pd.DataFrame({'x': np.random.choice(['A', 'B', 'C', 'D'], n, replace = True
                    'z': np.random.rand(n)})
 
 
-# 1.73ms (949µs M1) (1.82ms Dell G5)
+# 1.73ms (928µs M1) (1.82ms Dell G5)
 %timeit df.groupby('x').agg({'y': 'mean', 'z': 'median'})
