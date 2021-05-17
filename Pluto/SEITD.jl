@@ -92,8 +92,8 @@ md"""
 onde:
 
 * β = taxa de infecção
-* ω = taxa de fatalidade
-* dL = tempo médio entre infecção e a prevalência da doença
+* ω = taxa de letalidade
+* dL = tempo médio entre infecção e a incidência da doença
 * dI = tempo médio que o indivíduo permanece infectado
 * dT = tempo médio que o indivíduo fica terminalmente doente
 """
@@ -198,7 +198,7 @@ sol_ode = solve(prob_ode, saveat=1.0)
 
 # ╔═╡ 20ae3b7c-cf27-4f1f-be30-571357bd2400
 begin
-	plot(sol_ode, dpi=300, label=[L"S" L"E" L"I" L"T" L"D"])
+	plot(sol_ode, dpi=300, label=[L"S" L"E" L"I" L"T" L"D"], lw=3)
 	xlabel!("dias")
 	ylabel!("N")
 end
@@ -287,7 +287,7 @@ L"""
 # ╟─3f76407f-463f-42d3-80ed-3c33fd440864
 # ╠═a27d24a7-1b9e-4528-aa2d-a526d17a6f70
 # ╟─0c0d6703-c0d6-4441-878b-9747921f08a2
-# ╠═25db3d70-79d3-4504-ac94-8e013e9cd4e1
+# ╟─25db3d70-79d3-4504-ac94-8e013e9cd4e1
 # ╟─7ea58275-b0e9-475b-9f82-544abc52af36
 # ╠═3ab03ca5-4d63-4c40-ba19-1044d7f32bb0
 # ╟─08f582e8-bad6-42ea-8292-ff8cf44b3300
