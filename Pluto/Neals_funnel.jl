@@ -58,7 +58,7 @@ What if we reparameterize so that we can express $y$ and $x_n$ as standard norma
 
 ```math
 \begin{aligned}
-x^* &\sim \text{Normal}(0, 0)\\
+x^* &\sim \text{Normal}(0, 1)\\
 x &= x^* \cdot \sigma_x + \mu_x
 \end{aligned}
 ```
