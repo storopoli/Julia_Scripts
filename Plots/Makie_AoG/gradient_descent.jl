@@ -52,7 +52,7 @@ ax2 = Axis3(fig[2, 1])
 # different plots you can see of f and ∇f
 xa = LinRange(-5, 5, 500)
 ya = LinRange(-5, 5, 500)
-za = .-[f(x, y) for x ∈ xa, y ∈ ya]
+za = [-f(x, y) for x ∈ xa, y ∈ ya]
 # ∇za = [∇f(x, y) for x ∈ xa, y ∈ ya]
 
 plotobj2d = contour3d!(ax1, xa, ya, za; shading=false, linewidth=3, levels=20)
